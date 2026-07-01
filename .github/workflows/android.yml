@@ -2,7 +2,8 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,21 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install Capacitor
-        run: npm install @capacitor/cli @capacitor/core
-
-      - name: Sync Capacitor
-        run: npx cap sync android
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -32,16 +20,26 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # 👇 اینجا مهم‌ترین تغییر
-      - name: Build APK
-        run: |
-          ls android
-          cd android
-          ls
-          ./gradlew assembleDebug
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: APK
+          name: LumoChat-Debug-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
