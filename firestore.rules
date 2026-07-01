@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// ⚠️ IMPORTANT: The app's phone/OTP login is currently a UI-only mock —
+// it is NOT real Firebase Authentication, so there is no server-side way
+// to verify "who" is writing. These rules are open so the app functions
+// at all. That means ANYONE who has your app (or just your Firebase
+// config, which ships inside the APK) can read and write ALL chat
+// messages and game data. This is fine for a private test/demo, but is
+// NOT safe for a real public release with strangers using it.
+//
+// Before a real public launch, replace the mock OTP with real Firebase
+// Phone Authentication and tighten these rules to check request.auth.
+// Ask Claude for help wiring that up when you're ready.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /lumochat_shared/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

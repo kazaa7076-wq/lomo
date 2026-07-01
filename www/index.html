@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LumoChat</title>
+<style>
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/vazirmatn/33.0.3/Vazirmatn-font-face.css');
+
+  :root{
+    --bg-0:#07060d;
+    --bg-1:#0e0c1a;
+    --bg-2:#161325;
+    --bg-3:#1d1930;
+    --line:#2a2540;
+    --ink:#f3f1fb;
+    --ink-dim:#9a93b8;
+    --ink-faint:#6b6489;
+    --violet:#8b5cf6;
+    --blue:#4f8bff;
+    --pink:#ff5fae;
+    --green:#37e08c;
+    --grad: linear-gradient(135deg, var(--blue), var(--violet) 55%, var(--pink));
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Vazirmatn', system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(139,92,246,.18), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(79,139,255,.14), transparent 40%),
+      var(--bg-0);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+  }
+
+  .phone{
+    width:100%;
+    max-width:420px;
+    height:860px;
+    max-height:92vh;
+    background:var(--bg-1);
+    border:1px solid var(--line);
+    border-radius:34px;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02) inset;
+  }
+
+  /* ---------- animations ---------- */
+  @keyframes screenIn{
+    from{ opacity:0; transform:translateX(18px) scale(.99); }
+    to{ opacity:1; transform:translateX(0) scale(1); }
+  }
+  @keyframes screenInBack{
+    from{ opacity:0; transform:translateX(-18px) scale(.99); }
+    to{ opacity:1; transform:translateX(0) scale(1); }
+  }
+  @keyframes bubbleIn{
+    from{ opacity:0; transform:translateY(10px) scale(.92); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes pulseRing{
+    0%,100%{ box-shadow:0 0 26px rgba(139,92,246,.25); }
+    50%{ box-shadow:0 0 58px rgba(139,92,246,.6); }
+  }
+  @keyframes spinSlow{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+  @keyframes dotBlink{
+    0%,80%,100%{ opacity:.25; transform:translateY(0); }
+    40%{ opacity:1; transform:translateY(-3px); }
+  }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); }
+    20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-4px); }
+    40%,60%{ transform:translateX(4px); }
+  }
+  @keyframes rippleFx{
+    from{ transform:scale(0); opacity:.55; }
+    to{ transform:scale(2.6); opacity:0; }
+  }
+  @keyframes splashLogo{
+    0%{ transform:scale(.7); opacity:0; }
+    60%{ transform:scale(1.06); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+  @keyframes barLoad{
+    from{ width:0%; }
+    to{ width:100%; }
+  }
+  @keyframes badgePop{
+    0%{ transform:scale(0); }
+    70%{ transform:scale(1.25); }
+    100%{ transform:scale(1); }
+  }
+
+  .ripple-host{ position:relative; overflow:hidden; }
+  .ripple{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,.5);
+    width:16px; height:16px; pointer-events:none;
+    animation:rippleFx .55s ease-out forwards;
+  }
+
+  /* ---------- status hint ---------- */
+  .status{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 20px 0; font-size:12px; color:var(--ink-dim); flex:none;
+  }
+
+  /* ---------- generic header ---------- */
+  .header{
+    flex:none;
+    padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .logo{
+    width:30px;height:30px;border-radius:50%;
+    background:var(--grad);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 16px rgba(139,92,246,.55);
+  }
+  .brand h1{
+    font-size:18px; margin:0; font-weight:800;
+    background:var(--grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .icon-btn{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-dim); background:transparent; border:none;
+    cursor:pointer; transition:color .15s, background .15s;
+  }
+  .icon-btn:hover{ color:var(--ink); }
+  .icon-btn.boxed{ background:var(--bg-2); border:1px solid var(--line); }
+  .icon-btn.boxed:hover{ border-color:var(--violet); }
+  .icon-btn:active{ transform:scale(.9); }
+
+  /* ---------- tabs row ---------- */
+  .tabs{
+    flex:none; display:flex; gap:22px; padding:0 18px 12px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab{
+    color:var(--ink-faint); font-size:13.5px; font-weight:700; white-space:nowrap;
+    padding-bottom:4px; cursor:pointer; display:flex; align-items:center; gap:5px;
+    transition:color .15s;
+  }
+  .tab.active{ color:var(--violet); border-bottom:2px solid var(--violet); }
+  .tab .count{
+    background:var(--bg-3); color:var(--ink-dim); font-size:10px; font-weight:700;
+    border-radius:20px; padding:1px 6px;
+  }
+  .tab.active .count{ background:var(--violet); color:white; }
+
+  /* ---------- screens ---------- */
+  .screen{ flex:1; min-height:0; display:none; flex-direction:column; }
+  .screen.active{ display:flex; animation:screenIn .32s cubic-bezier(.22,.8,.32,1); }
+  .screen.active.back-anim{ animation:screenInBack .32s cubic-bezier(.22,.8,.32,1); }
+
+  /* ===== SPLASH ===== */
+  #splash{ align-items:center; justify-content:center; gap:18px; }
+  .splash-logo{
+    width:108px;height:108px;border-radius:32px;
+    background:var(--bg-2); border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    animation:splashLogo .7s cubic-bezier(.22,.85,.3,1.2), pulseRing 2.4s ease-in-out infinite 0.7s;
+    position:relative;
+  }
+  .splash-logo::before{
+    content:''; position:absolute; inset:-3px; border-radius:34px;
+    background:conic-gradient(var(--blue), var(--violet), var(--pink), var(--blue));
+    z-index:-1; animation:spinSlow 3s linear infinite; opacity:.55; filter:blur(6px);
+  }
+  #splash h1{
+    font-size:26px; margin:0; font-weight:800;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .splash-bar{ width:140px; height:3px; background:var(--bg-2); border-radius:10px; overflow:hidden; }
+  .splash-bar span{ display:block; height:100%; background:var(--grad); animation:barLoad 1.4s ease forwards; }
+
+  /* ===== AUTH (phone / otp / name) shared styles ===== */
+  .auth{ align-items:center; justify-content:center; padding:36px 30px; text-align:center; gap:16px; overflow-y:auto;}
+  .auth-icon{
+    width:80px;height:80px;border-radius:50%;
+    background:var(--bg-2); border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:4px; animation:pulseRing 3s ease-in-out infinite;
+  }
+  .auth h2{ font-size:21px; margin:0; font-weight:800; }
+  .auth p.sub{ color:var(--ink-dim); margin:0 0 6px; font-size:13.5px; line-height:1.8; max-width:300px; }
+  .phone-row{
+    display:flex; align-items:center; gap:8px; width:100%;
+  }
+  .cc{
+    background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:14px; padding:14px 12px; font-size:15px; font-weight:700; flex:none;
+  }
+  .auth input[type=text], .auth input[type=tel]{
+    width:100%;
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:14px;
+    padding:14px 16px;
+    font-family:inherit;
+    font-size:15px;
+    outline:none;
+    text-align:center;
+    transition:border-color .15s;
+  }
+  .auth input:focus{ border-color:var(--violet); }
+  .auth input.ltr{ direction:ltr; }
+  .btn-primary{
+    width:100%;
+    border:none;
+    padding:14px 16px;
+    border-radius:14px;
+    background:var(--grad);
+    color:white;
+    font-family:inherit;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(139,92,246,.35);
+    position:relative;
+    transition:transform .1s;
+  }
+  .btn-primary:active{ transform:scale(.97); }
+  .btn-primary:disabled{ opacity:.5; cursor:default; }
+  .btn-ghost{
+    background:transparent; border:none; color:var(--ink-dim); font-family:inherit;
+    font-size:13px; cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+  }
+  .hint{ font-size:11px; color:var(--ink-faint); line-height:1.7; margin-top:4px; }
+  .feature-pills{ display:flex; flex-direction:column; gap:9px; width:100%; margin-top:6px; }
+  .pill{
+    background:var(--bg-2); border:1px solid var(--line); border-radius:14px;
+    padding:11px 16px; font-size:13px; color:var(--ink-dim); text-align:center;
+  }
+
+  .otp-boxes{ display:flex; gap:9px; direction:ltr; }
+  .otp-boxes input{
+    width:46px; height:54px; text-align:center; font-size:20px; font-weight:800;
+    background:var(--bg-2); border:1px solid var(--line); border-radius:12px;
+    color:var(--ink); outline:none; font-family:inherit;
+  }
+  .otp-boxes input:focus{ border-color:var(--violet); }
+  .otp-boxes.shake{ animation:shake .4s; }
+  .otp-banner{
+    background:var(--bg-2); border:1px dashed var(--violet); border-radius:12px;
+    padding:10px 14px; font-size:12.5px; color:var(--ink-dim); line-height:1.8;
+  }
+  .otp-banner b{ color:var(--violet); font-size:15px; letter-spacing:2px; }
+
+  /* ===== CHAT LIST ===== */
+  #chatlist .list{ flex:1; overflow-y:auto; }
+  .room-row{
+    display:flex; align-items:center; gap:12px;
+    padding:13px 18px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .room-row:active{ background:var(--bg-2); }
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex:none;
+    background:var(--grad);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800; color:white; font-size:16px;
+  }
+  .room-meta{ flex:1; min-width:0; }
+  .room-top{ display:flex; justify-content:space-between; align-items:center; }
+  .room-top .name{ font-weight:700; font-size:15px; }
+  .room-top .time{ font-size:11px; color:var(--ink-faint); }
+  .room-bottom{ display:flex; justify-content:space-between; align-items:center; margin-top:3px;}
+  .room-bottom .preview{
+    color:var(--ink-dim); font-size:13px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px;
+  }
+  .badge{
+    background:var(--violet); color:white; font-size:11px; font-weight:700;
+    border-radius:20px; padding:1px 7px; min-width:18px; text-align:center;
+    animation:badgePop .3s ease;
+  }
+  .new-room-bar{
+    display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); flex:none;
+  }
+  .new-room-bar input{
+    flex:1; background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:12px; padding:10px 12px; font-family:inherit; outline:none; font-size:13px;
+  }
+  .new-room-bar button{
+    background:var(--grad); border:none; color:white; border-radius:12px;
+    padding:0 16px; font-weight:700; cursor:pointer; font-family:inherit; font-size:13px;
+  }
+
+  /* ===== CHAT ROOM ===== */
+  #room .header .back{ display:flex; align-items:center; gap:10px; }
+  .messages{
+    flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px;
+  }
+  .bubble{
+    max-width:75%;
+    padding:10px 14px;
+    border-radius:16px;
+    font-size:14px;
+    line-height:1.6;
+    position:relative;
+    word-wrap:break-word;
+    animation:bubbleIn .28s cubic-bezier(.2,.85,.3,1.1);
+  }
+  .bubble .meta{ font-size:10px; opacity:.7; margin-top:4px; display:block; }
+  .msg-them{
+    align-self:flex-start;
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    border-bottom-right-radius:4px;
+  }
+  .msg-them .sender{ font-size:11px; font-weight:700; color:var(--violet); display:block; margin-bottom:3px; }
+  .msg-me{
+    align-self:flex-end;
+    background:var(--grad);
+    color:white;
+    border-bottom-left-radius:4px;
+  }
+  .typing-row{ align-self:flex-start; display:flex; gap:4px; padding:12px 16px; background:var(--bg-2); border:1px solid var(--line); border-radius:16px; border-bottom-right-radius:4px; }
+  .typing-row span{ width:6px; height:6px; border-radius:50%; background:var(--ink-faint); animation:dotBlink 1.2s infinite; }
+  .typing-row span:nth-child(2){ animation-delay:.15s; }
+  .typing-row span:nth-child(3){ animation-delay:.3s; }
+  .empty-room{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:var(--ink-faint); gap:10px; padding:30px; text-align:center; font-size:13px;
+  }
+  .composer{
+    flex:none; display:flex; align-items:center; gap:8px;
+    padding:10px 14px; border-top:1px solid var(--line);
+  }
+  .composer input{
+    flex:1; background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:20px; padding:11px 16px; font-family:inherit; outline:none; font-size:14px;
+    transition:border-color .15s;
+  }
+  .composer input:focus{ border-color:var(--violet); }
+  .send-btn{
+    width:40px;height:40px;border-radius:50%;flex:none;
+    background:var(--grad); border:none; color:white; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s;
+  }
+  .send-btn:active{ transform:scale(.85) rotate(-8deg); }
+
+  /* ===== SETTINGS ===== */
+  #settings .profile-card{
+    display:flex; align-items:center; gap:14px; padding:20px 18px; border-bottom:1px solid var(--line);
+  }
+  .profile-card .avatar{ width:58px; height:58px; font-size:20px; }
+  .profile-card .name{ font-weight:800; font-size:16px; }
+  .profile-card .phone-line{ color:var(--ink-faint); font-size:12px; margin-top:2px; direction:ltr; display:inline-block; }
+  .profile-card .status-line{ color:var(--green); font-size:12px; margin-top:2px; display:flex; align-items:center; gap:5px; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulseDot 2s infinite; }
+  @keyframes pulseDot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .settings-list{ flex:1; overflow-y:auto; }
+  .settings-row{
+    display:flex; align-items:center; gap:14px; padding:14px 18px;
+    border-bottom:1px solid var(--line); color:var(--ink-dim); font-size:14px;
+    transition:background .15s;
+  }
+  .settings-row:active{ background:var(--bg-2); }
+  .settings-row .ic{ width:20px; text-align:center; color:var(--violet); }
+  .settings-row .v{ margin-right:auto; color:var(--ink-faint); font-size:12px; }
+  .logout-row{ color:var(--pink); cursor:pointer; }
+
+  /* ===== BOTTOM NAV ===== */
+  .navbar{
+    flex:none; display:flex; border-top:1px solid var(--line);
+    background:var(--bg-1);
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:10px 0 12px; color:var(--ink-faint); cursor:pointer; font-size:11px;
+    transition:color .2s, transform .15s;
+  }
+  .nav-btn.active{ color:var(--violet); transform:translateY(-2px); }
+  .nav-btn svg{ width:21px; height:21px; }
+  .nav-btn:active{ transform:scale(.92); }
+
+  ::-webkit-scrollbar{ width:5px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
+
+  /* ===== GAMES MENU ===== */
+  #games .list, #gameLobby .lobby-body{ flex:1; overflow-y:auto; }
+  .game-card{
+    display:flex; align-items:center; gap:14px; padding:16px 18px;
+    border-bottom:1px solid var(--line); cursor:pointer; transition:background .15s;
+  }
+  .game-card:active{ background:var(--bg-2); }
+  .game-card .g-icon{
+    width:52px; height:52px; border-radius:16px; flex:none;
+    background:var(--bg-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+  }
+  .game-card .g-meta{ flex:1; min-width:0; }
+  .game-card .g-meta .g-name{ font-weight:800; font-size:15px; }
+  .game-card .g-meta .g-desc{ color:var(--ink-dim); font-size:12.5px; margin-top:3px; line-height:1.6; }
+  .game-card .g-badge{
+    background:var(--bg-3); color:var(--green); font-size:10.5px; font-weight:700;
+    border-radius:20px; padding:3px 9px; flex:none; display:flex; align-items:center; gap:4px;
+  }
+  .game-card .g-badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulseDot 2s infinite; }
+  .games-hero{
+    padding:22px 18px 6px; text-align:center;
+  }
+  .games-hero h2{ margin:0 0 4px; font-size:19px; font-weight:800;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .games-hero p{ margin:0; color:var(--ink-dim); font-size:12.5px; }
+
+  /* ===== GAME LOBBY ===== */
+  .lobby-body{ padding:18px; display:flex; flex-direction:column; gap:16px; }
+  .lobby-hero{ text-align:center; padding:6px 0 2px; }
+  .lobby-hero .g-icon-lg{ font-size:40px; }
+  .lobby-hero h2{ margin:8px 0 4px; font-size:18px; font-weight:800; }
+  .lobby-hero p{ margin:0; color:var(--ink-dim); font-size:12.5px; }
+  .lobby-join-row{ display:flex; gap:8px; }
+  .lobby-join-row input{
+    flex:1; background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:12px; padding:11px 12px; font-family:inherit; outline:none; font-size:14px;
+    text-align:center; letter-spacing:2px; text-transform:uppercase;
+  }
+  .lobby-join-row button{
+    background:var(--bg-2); border:1px solid var(--violet); color:var(--violet);
+    border-radius:12px; padding:0 16px; font-weight:700; cursor:pointer; font-family:inherit; font-size:13px;
+  }
+  .lobby-divider{ display:flex; align-items:center; gap:10px; color:var(--ink-faint); font-size:11.5px; }
+  .lobby-divider::before, .lobby-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .lobby-section-title{ font-size:12.5px; color:var(--ink-faint); font-weight:700; }
+  .lobby-row{
+    display:flex; align-items:center; gap:12px; padding:10px 12px;
+    background:var(--bg-2); border:1px solid var(--line); border-radius:14px; margin-bottom:8px;
+  }
+
+  /* ===== IN-GAME SHARED ===== */
+  .game-waiting{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:30px; text-align:center;
+  }
+  .waiting-pulse{
+    width:70px; height:70px; border-radius:50%; background:var(--bg-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:28px;
+    animation:pulseRing 2.2s ease-in-out infinite;
+  }
+  .waiting-code{
+    font-size:26px; font-weight:800; letter-spacing:5px; color:var(--violet);
+    background:var(--bg-2); border:1px dashed var(--violet); border-radius:14px; padding:10px 22px;
+  }
+  .game-status-bar{
+    flex:none; padding:12px 18px; text-align:center; font-weight:700; font-size:14px;
+    border-bottom:1px solid var(--line); color:var(--ink-dim);
+  }
+  .game-footer{ flex:none; display:flex; gap:10px; padding:14px 18px; border-top:1px solid var(--line); }
+  .game-footer button{ flex:1; }
+  .btn-secondary{
+    width:100%; border:1px solid var(--line); background:var(--bg-2); color:var(--ink-dim);
+    padding:12px 16px; border-radius:14px; font-family:inherit; font-weight:700; font-size:13.5px; cursor:pointer;
+  }
+
+  /* ===== XO BOARD ===== */
+  #gameXO .arena{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
+  .board{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:250px; height:250px;
+  }
+  .cell{
+    background:var(--bg-2); border:1px solid var(--line); border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:36px; font-weight:800; cursor:pointer; transition:background .15s;
+  }
+  .cell:active{ background:var(--bg-3); }
+  .cell.filled{ cursor:default; }
+  .opponent-tag{ color:var(--ink-dim); font-size:13px; }
+
+  /* ===== REFLEX ===== */
+  #gameReflex .arena{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:20px; }
+  .reflex-circle{
+    width:190px; height:190px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px; font-weight:800; color:white; cursor:pointer;
+    background:var(--bg-3); border:2px solid var(--line); transition:background .15s, transform .1s;
+    text-align:center; user-select:none;
+  }
+  .reflex-circle:active{ transform:scale(.96); }
+  .reflex-circle.red{ background:linear-gradient(135deg,#ff5fae,#c93b6d); border-color:#ff5fae; box-shadow:0 0 40px rgba(255,95,174,.35); }
+  .reflex-circle.green{ background:linear-gradient(135deg,#37e08c,#1fa868); border-color:#37e08c; box-shadow:0 0 50px rgba(55,224,140,.5); }
+  .reflex-result{ font-size:14px; font-weight:700; text-align:center; min-height:20px; color:var(--ink); }
+
+  /* ===== RPS ===== */
+  #gameRPS .arena{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
+  .rps-score{ display:flex; align-items:center; gap:16px; font-size:14px; color:var(--ink-dim); }
+  .rps-score .n{ font-size:26px; font-weight:800; color:var(--ink); }
+  .rps-score .vs{ color:var(--ink-faint); font-size:12px; }
+  .rps-choices{ display:flex; gap:14px; }
+  .rps-btn{
+    width:64px; height:64px; border-radius:50%; font-size:28px;
+    background:var(--bg-2); border:1px solid var(--line); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s, border-color .15s;
+  }
+  .rps-btn:active{ transform:scale(.88); }
+  .rps-btn:hover{ border-color:var(--violet); }
+  .rps-round-result{ font-size:15px; font-weight:700; text-align:center; min-height:22px; }
+</style>
+</head>
+<body>
+
+<div id="recaptcha-container"></div>
+
+<div class="phone" id="phoneShell">
+
+  <!-- ============ SPLASH ============ -->
+  <div class="screen active" id="splash">
+    <div class="splash-logo">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="url(#g1)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="8.5" cy="11.5" r="1.2" fill="#4f8bff"/>
+        <circle cx="12" cy="11.5" r="1.2" fill="#8b5cf6"/>
+        <circle cx="15.5" cy="11.5" r="1.2" fill="#ff5fae"/>
+        <defs><linearGradient id="g1" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#4f8bff"/><stop offset="0.5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#ff5fae"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h1>LumoChat</h1>
+    <div class="splash-bar"><span></span></div>
+  </div>
+
+  <!-- ============ PHONE NUMBER ============ -->
+  <div class="screen auth" id="phoneScreen">
+    <div class="auth-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#g2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#4f8bff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h2>شماره موبایلت رو وارد کن</h2>
+    <p class="sub">برای ثبت‌نام یا ورود به LumoChat، شماره موبایل لازمه. کد تأیید براش ارسال می‌شه.</p>
+    <div class="phone-row">
+      <div class="cc">98+</div>
+      <input id="phoneInput" type="tel" class="ltr" placeholder="912 345 6789" maxlength="11"/>
+    </div>
+    <button class="btn-primary ripple-host" id="sendOtpBtn" onclick="sendOtp()">دریافت کد تأیید</button>
+    <p class="hint">کد تأیید واقعی از طریق پیامک برات ارسال می‌شه.</p>
+  </div>
+
+  <!-- ============ OTP ============ -->
+  <div class="screen auth" id="otpScreen">
+    <div class="auth-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#g3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        <defs><linearGradient id="g3" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#ff5fae"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h2>کد تأیید رو وارد کن</h2>
+    <p class="sub">کد ۵ رقمی برای شماره‌ی <b id="otpPhoneShow" style="color:var(--ink); direction:ltr; display:inline-block;"></b> ارسال شد.</p>
+    <div class="otp-banner" id="otpBanner" style="display:none;">⚠️ ارسال کد ناموفق بود.</div>
+    <div class="otp-boxes" id="otpBoxes">
+      <input maxlength="1" inputmode="numeric"/>
+      <input maxlength="1" inputmode="numeric"/>
+      <input maxlength="1" inputmode="numeric"/>
+      <input maxlength="1" inputmode="numeric"/>
+      <input maxlength="1" inputmode="numeric"/>
+    </div>
+    <button class="btn-primary ripple-host" id="verifyOtpBtn" onclick="verifyOtp()">تأیید و ادامه</button>
+    <button class="btn-ghost" onclick="resendOtp()">ارسال دوباره‌ی کد</button>
+    <button class="btn-ghost" onclick="goScreen('phoneScreen', true)">ویرایش شماره</button>
+  </div>
+
+  <!-- ============ NAME SETUP (first time only) ============ -->
+  <div class="screen auth" id="nameScreen">
+    <div class="login-wrap">
+      <div class="auth-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="url(#g1)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <h2>اسمت چیه؟</h2>
+    <p class="sub">این اسم برای بقیه‌ی کاربرا توی چت‌ها نمایش داده می‌شه.</p>
+    <input id="nameInput" type="text" placeholder="مثلاً امیررضا" maxlength="20"/>
+    <button class="btn-primary ripple-host" onclick="completeSignup()">ورود به LumoChat</button>
+    <div class="feature-pills">
+      <div class="pill">⚡ سریع و هوشمند</div>
+      <div class="pill">🛡️ امن و خصوصی</div>
+      <div class="pill">🎯 دستیار هوشمند</div>
+      <div class="pill">✨ امکانات پیشرفته</div>
+    </div>
+  </div>
+
+  <!-- ============ CHAT LIST ============ -->
+  <div class="screen" id="chatlist">
+    <div class="header">
+      <div class="icon-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </div>
+      <div class="brand"><h1>LumoChat</h1></div>
+      <div class="header-actions">
+        <div class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+        <div class="icon-btn" onclick="document.getElementById('newRoomInput').focus()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active">همه <span class="count" id="tabCount">0</span></div>
+      <div class="tab">نخوانده</div>
+      <div class="tab">گروه‌ها</div>
+      <div class="tab">کانال‌ها</div>
+      <div class="tab">ربات‌ها</div>
+    </div>
+    <div class="list" id="roomList"></div>
+    <div class="new-room-bar">
+      <input id="newRoomInput" placeholder="نام اتاق جدید…" maxlength="24"/>
+      <button onclick="createRoom()">+ اتاق</button>
+    </div>
+    <div class="navbar">
+      <div class="nav-btn active" onclick="showScreen('chatlist')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        چت‌ها
+      </div>
+      <div class="nav-btn" onclick="showScreen('calls')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        تماس‌ها
+      </div>
+      <div class="nav-btn" onclick="showScreen('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        تنظیمات
+      </div>
+      <div class="nav-btn" onclick="showScreen('games')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M7 12h4M9 10v4M15.5 12h.01M18 10.5h.01"/></svg>
+        بازی‌ها
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CALLS (placeholder) ============ -->
+  <div class="screen" id="calls">
+    <div class="header"><div class="brand"><h1 style="font-size:17px;">تماس‌ها</h1></div></div>
+    <div class="empty-room">
+      <div style="font-size:30px;">📞</div>
+      هنوز تماسی ثبت نشده.<br/>این بخش به‌زودی فعال می‌شه.
+    </div>
+    <div class="navbar">
+      <div class="nav-btn" onclick="showScreen('chatlist')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>چت‌ها</div>
+      <div class="nav-btn active" onclick="showScreen('calls')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>تماس‌ها</div>
+      <div class="nav-btn" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>تنظیمات</div>
+      <div class="nav-btn" onclick="showScreen('games')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M7 12h4M9 10v4M15.5 12h.01M18 10.5h.01"/></svg>بازی‌ها</div>
+    </div>
+  </div>
+
+  <!-- ============ ROOM / CHAT ============ -->
+  <div class="screen" id="room">
+    <div class="header">
+      <div class="back">
+        <div class="icon-btn" onclick="showScreen('chatlist')">→</div>
+        <div class="avatar" id="roomAvatar" style="width:36px;height:36px;font-size:13px;"></div>
+        <div>
+          <div style="font-weight:700; font-size:15px;" id="roomTitle"></div>
+          <div style="font-size:11px; color:var(--ink-faint);" id="roomSub"></div>
+        </div>
+      </div>
+      <div class="icon-btn" onclick="refreshMessages(true)">⟳</div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="composer">
+      <input id="msgInput" placeholder="پیام بنویس…" onkeydown="if(event.key==='Enter')sendMessage()"/>
+      <button class="send-btn ripple-host" onclick="sendMessage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS ============ -->
+  <div class="screen" id="settings">
+    <div class="header">
+      <div class="brand"><h1 style="font-size:17px;">تنظیمات</h1></div>
+    </div>
+    <div class="settings-list">
+      <div class="profile-card">
+        <div class="avatar" id="meAvatar"></div>
+        <div>
+          <div class="name" id="meName"></div>
+          <div class="phone-line" id="mePhone"></div>
+          <div class="status-line"><span class="status-dot"></span> آنلاین</div>
+        </div>
+      </div>
+      <div class="settings-row"><span class="ic">👤</span> حساب کاربری</div>
+      <div class="settings-row"><span class="ic">🔒</span> حریم خصوصی و امنیت</div>
+      <div class="settings-row"><span class="ic">🔔</span> اعلان‌ها</div>
+      <div class="settings-row"><span class="ic">💬</span> چت‌ها</div>
+      <div class="settings-row"><span class="ic">💾</span> داده و فضای ذخیره‌سازی</div>
+      <div class="settings-row"><span class="ic">📱</span> دستگاه‌ها</div>
+      <div class="settings-row"><span class="ic">🎨</span> ظاهر برنامه</div>
+      <div class="settings-row"><span class="ic">🌐</span> زبان <span class="v">فارسی</span></div>
+      <div class="settings-row"><span class="ic">ℹ️</span> درباره‌ی LumoChat</div>
+      <div class="settings-row logout-row" onclick="logout()"><span class="ic">↩</span> خروج و تغییر شماره</div>
+    </div>
+    <div class="navbar">
+      <div class="nav-btn" onclick="showScreen('chatlist')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        چت‌ها
+      </div>
+      <div class="nav-btn" onclick="showScreen('calls')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        تماس‌ها
+      </div>
+      <div class="nav-btn active" onclick="showScreen('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        تنظیمات
+      </div>
+      <div class="nav-btn" onclick="showScreen('games')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M7 12h4M9 10v4M15.5 12h.01M18 10.5h.01"/></svg>
+        بازی‌ها
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GAMES MENU ============ -->
+  <div class="screen" id="games">
+    <div class="header">
+      <div class="brand"><h1 style="font-size:17px;">🎮 بازی‌ها</h1></div>
+    </div>
+    <div class="list">
+      <div class="games-hero">
+        <h2>آماده‌ی رقابتی؟</h2>
+        <p>یه بازی انتخاب کن و آنلاین با یکی دیگه رقابت کن</p>
+      </div>
+      <div class="game-card" onclick="openGameLobby('xo')">
+        <div class="g-icon">⭕❌</div>
+        <div class="g-meta">
+          <div class="g-name">دوئل ایکس‌دو</div>
+          <div class="g-desc">بازی کلاسیک دونفره؛ هرکی سه‌تا رو ردیف کنه می‌بره</div>
+        </div>
+        <div class="g-badge">آنلاین</div>
+      </div>
+      <div class="game-card" onclick="openGameLobby('reflex')">
+        <div class="g-icon">⚡</div>
+        <div class="g-meta">
+          <div class="g-name">دوئل رفلکس</div>
+          <div class="g-desc">وقتی چراغ سبز شد سریع‌تر از حریف بزن! پرهیجان‌ترین بازی</div>
+        </div>
+        <div class="g-badge">آنلاین</div>
+      </div>
+      <div class="game-card" onclick="openGameLobby('rps')">
+        <div class="g-icon">✊✋✌️</div>
+        <div class="g-meta">
+          <div class="g-name">سنگ‌کاغذ‌قیچی</div>
+          <div class="g-desc">اولین نفری که ۳ دور رو ببره، قهرمانه</div>
+        </div>
+        <div class="g-badge">آنلاین</div>
+      </div>
+    </div>
+    <div class="navbar">
+      <div class="nav-btn" onclick="showScreen('chatlist')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>چت‌ها</div>
+      <div class="nav-btn" onclick="showScreen('calls')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>تماس‌ها</div>
+      <div class="nav-btn active" onclick="showScreen('games')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M7 12h4M9 10v4M15.5 12h.01M18 10.5h.01"/></svg>بازی‌ها</div>
+      <div class="nav-btn" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>تنظیمات</div>
+    </div>
+  </div>
+
+  <!-- ============ GAME LOBBY (matchmaking) ============ -->
+  <div class="screen" id="gameLobby">
+    <div class="header">
+      <div class="back">
+        <div class="icon-btn" onclick="backToGamesMenu()">→</div>
+        <div style="font-weight:700; font-size:15px;" id="lobbyTitle"></div>
+      </div>
+    </div>
+    <div class="lobby-body">
+      <div class="lobby-hero">
+        <p id="lobbyDesc"></p>
+      </div>
+      <button class="btn-primary ripple-host" onclick="hostNewGame()">🎮 ساخت بازی جدید</button>
+      <div class="lobby-join-row">
+        <input id="joinCodeInput" placeholder="کد بازی رو وارد کن" maxlength="8"/>
+        <button onclick="joinWithCode()">پیوستن</button>
+      </div>
+      <div class="lobby-divider">یا از بین بازی‌های باز یکی رو انتخاب کن</div>
+      <div id="lobbySessions"></div>
+    </div>
+  </div>
+
+  <!-- ============ GAME: XO ============ -->
+  <div class="screen" id="gameXO">
+    <div class="header">
+      <div class="back">
+        <div class="icon-btn" onclick="leaveGame()">→</div>
+        <div style="font-weight:700; font-size:15px;">⭕❌ دوئل ایکس‌دو</div>
+      </div>
+    </div>
+    <div class="game-waiting" id="xoWaiting">
+      <div class="waiting-pulse">⏳</div>
+      <div>در انتظار پیوستن حریف...</div>
+      <div class="waiting-code" id="xoCode"></div>
+      <div style="font-size:12px;color:var(--ink-faint);">این کد رو به دوستت بده تا بهت ملحق بشه</div>
+      <button class="btn-ghost" onclick="cancelWaitingGame()">لغو بازی</button>
+    </div>
+    <div class="arena" id="xoBoardWrap" style="display:none;">
+      <div class="opponent-tag" id="xoOpponent"></div>
+      <div class="board" id="xoBoard"></div>
+    </div>
+    <div class="game-status-bar" id="xoStatus"></div>
+    <div class="game-footer">
+      <button class="btn-secondary" onclick="leaveGame()">خروج</button>
+      <button class="btn-primary ripple-host" id="xoRestartBtn" style="display:none;" onclick="restartXO()">بازی دوباره</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME: REFLEX ============ -->
+  <div class="screen" id="gameReflex">
+    <div class="header">
+      <div class="back">
+        <div class="icon-btn" onclick="leaveGame()">→</div>
+        <div style="font-weight:700; font-size:15px;">⚡ دوئل رفلکس</div>
+      </div>
+    </div>
+    <div class="game-waiting" id="reflexWaiting">
+      <div class="waiting-pulse">⏳</div>
+      <div>در انتظار پیوستن حریف...</div>
+      <div class="waiting-code" id="reflexCode"></div>
+      <div style="font-size:12px;color:var(--ink-faint);">این کد رو به دوستت بده تا بهت ملحق بشه</div>
+      <button class="btn-ghost" onclick="cancelWaitingGame()">لغو بازی</button>
+    </div>
+    <div class="arena" id="reflexArena" style="display:none;">
+      <div class="opponent-tag" id="reflexOpponent"></div>
+      <div class="reflex-circle" id="reflexCircle" onclick="reflexTap()">صبر کن...</div>
+      <div class="reflex-result" id="reflexResult"></div>
+    </div>
+    <div class="game-footer">
+      <button class="btn-secondary" onclick="leaveGame()">خروج</button>
+      <button class="btn-primary ripple-host" id="reflexRestartBtn" style="display:none;" onclick="restartReflex()">دوباره بازی کن</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME: RPS ============ -->
+  <div class="screen" id="gameRPS">
+    <div class="header">
+      <div class="back">
+        <div class="icon-btn" onclick="leaveGame()">→</div>
+        <div style="font-weight:700; font-size:15px;">✊✋✌️ سنگ‌کاغذ‌قیچی</div>
+      </div>
+    </div>
+    <div class="game-waiting" id="rpsWaiting">
+      <div class="waiting-pulse">⏳</div>
+      <div>در انتظار پیوستن حریف...</div>
+      <div class="waiting-code" id="rpsCode"></div>
+      <div style="font-size:12px;color:var(--ink-faint);">این کد رو به دوستت بده تا بهت ملحق بشه</div>
+      <button class="btn-ghost" onclick="cancelWaitingGame()">لغو بازی</button>
+    </div>
+    <div class="arena" id="rpsArena" style="display:none;">
+      <div class="opponent-tag">در برابر: <span id="rpsOpponent"></span></div>
+      <div class="rps-score">
+        <span class="n" id="rpsScoreMe">0</span>
+        <span class="vs" id="rpsRound">دور ۱</span>
+        <span class="n" id="rpsScoreOpp">0</span>
+      </div>
+      <div class="rps-round-result" id="rpsRoundResult"></div>
+      <div class="rps-choices" id="rpsChoices">
+        <div class="rps-btn" onclick="rpsPick('rock')">✊</div>
+        <div class="rps-btn" onclick="rpsPick('paper')">✋</div>
+        <div class="rps-btn" onclick="rpsPick('scissors')">✌️</div>
+      </div>
+      <button class="btn-primary ripple-host" id="rpsNextBtn" style="display:none; width:auto; padding:10px 24px;" onclick="rpsNextRound()">دور بعد</button>
+    </div>
+    <div class="game-footer">
+      <button class="btn-secondary" onclick="leaveGame()">خروج</button>
+      <button class="btn-primary ripple-host" id="rpsRestartBtn" style="display:none;" onclick="restartRPS()">بازی دوباره</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* =====================================================================
+   FIREBASE INIT + STORAGE LAYER — replaces the Claude-artifact-only
+   `window.storage` API, and adds real Firebase Phone Authentication,
+   so this app can run as a real, published, multi-user app.
+
+   - shared=false (per-device cache, e.g. "who's logged in on THIS
+     phone") -> localStorage.
+   - shared=true (chat rooms, messages, game sessions, and the
+     phone->name profile lookup — data that must be visible to OTHER
+     people's phones) -> Firebase Firestore.
+   - Login (phone + SMS code) -> real Firebase Phone Authentication.
+
+   ⚠️ SETUP REQUIRED: fill in FIREBASE_CONFIG below with your own
+   Firebase project's config (Firebase Console → Project settings →
+   your web app → SDK setup and configuration), and enable
+   Authentication → Sign-in method → Phone. See README.md.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+if(FIREBASE_READY){
+  firebase.initializeApp(FIREBASE_CONFIG);
+} else {
+  console.warn('[LumoChat] Firebase config not set yet — login and shared data (chat/games) will not work. See README.md.');
+}
+const db = FIREBASE_READY ? firebase.firestore() : null;
+
+(function(){
+  const LOCAL_PREFIX = 'lumochat:private:';
+  const COLLECTION = 'lumochat_shared';
+
+  window.storage = {
+    async get(key, shared){
+      if(!shared){
+        const raw = localStorage.getItem(LOCAL_PREFIX + key);
+        return raw === null ? null : { key, value: raw, shared:false };
+      }
+      if(!db) return null;
+      const doc = await db.collection(COLLECTION).doc(key).get();
+      if(!doc.exists) return null;
+      return { key, value: doc.data().value, shared:true };
+    },
+    async set(key, value, shared){
+      if(!shared){
+        localStorage.setItem(LOCAL_PREFIX + key, value);
+        return { key, value, shared:false };
+      }
+      if(!db) throw new Error('Firebase not configured');
+      await db.collection(COLLECTION).doc(key).set({ value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      return { key, value, shared:true };
+    },
+    async delete(key, shared){
+      if(!shared){
+        const existed = localStorage.getItem(LOCAL_PREFIX + key) !== null;
+        localStorage.removeItem(LOCAL_PREFIX + key);
+        return { key, deleted: existed, shared:false };
+      }
+      if(!db) return null;
+      await db.collection(COLLECTION).doc(key).delete();
+      return { key, deleted:true, shared:true };
+    },
+    async list(prefix, shared){
+      if(!shared){
+        const keys = [];
+        for(let i=0;i<localStorage.length;i++){
+          const k = localStorage.key(i);
+          if(k && k.startsWith(LOCAL_PREFIX + (prefix||''))) keys.push(k.slice(LOCAL_PREFIX.length));
+        }
+        return { keys, prefix: prefix||undefined, shared:false };
+      }
+      if(!db) return { keys: [], prefix: prefix||undefined, shared:true };
+      const start = prefix || '';
+      const end = start + '\uf8ff';
+      const snap = await db.collection(COLLECTION)
+        .where(firebase.firestore.FieldPath.documentId(), '>=', start)
+        .where(firebase.firestore.FieldPath.documentId(), '<', end)
+        .get();
+      return { keys: snap.docs.map(doc=>doc.id), prefix: prefix||undefined, shared:true };
+    }
+  };
+})();
+
+let me = null;
+let myPhone = null;
+let pendingPhone = null;
+let currentRoom = null;
+let pollTimer = null;
+let roomsPollTimer = null;
+let lastRoomsSig = null;
+let lastMessagesSig = null;
+
+/* ---------- games state ---------- */
+let currentGameType = null;
+let currentSession = null;
+let myGameRole = null;
+let gamePollTimer = null;
+let reflexLocalTimer = null;
+
+const DEFAULT_ROOMS = [
+  {id:'general', name:'عمومی'},
+  {id:'random', name:'گپ آزاد'},
+  {id:'tech', name:'فناوری'}
+];
+
+function initials(name){
+  return (name||'?').trim().slice(0,1).toUpperCase();
+}
+
+function goScreen(id, back){
+  document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.classList.remove('back-anim'); });
+  const el = document.getElementById(id);
+  if(back) el.classList.add('back-anim');
+  el.classList.add('active');
+}
+
+function showScreen(id){
+  if(!['gameLobby','gameXO','gameReflex','gameRPS'].includes(id)){ stopGamePolling(); }
+  goScreen(id);
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`.nav-btn[onclick*="'${id}'"]`).forEach(b=>b.classList.add('active'));
+  if(id==='chatlist'){ loadRooms(); startRoomsPolling(); stopMessagePolling(); }
+  if(id==='settings' || id==='calls'){ stopMessagePolling(); }
+  if(id==='settings'){
+    document.getElementById('meAvatar').textContent=initials(me);
+    document.getElementById('meName').textContent=me;
+    document.getElementById('mePhone').textContent='+98 '+ (myPhone||'');
+  }
+  if(id!=='chatlist'){ stopRoomsPolling(); }
+}
+
+/* ---------- ripple micro-interaction ---------- */
+document.addEventListener('click', function(e){
+  const host = e.target.closest('.ripple-host');
+  if(!host) return;
+  const rect = host.getBoundingClientRect();
+  const r = document.createElement('span');
+  r.className='ripple';
+  r.style.left = (e.clientX-rect.left-8)+'px';
+  r.style.top = (e.clientY-rect.top-8)+'px';
+  host.appendChild(r);
+  setTimeout(()=>r.remove(),600);
+});
+
+/* ---------- auth flow: phone -> real SMS OTP (Firebase) -> name -> chatlist ---------- */
+let confirmationResult = null;
+let recaptchaVerifier = null;
+
+function toE164(digits){
+  const d = digits.replace(/^0+/, '');
+  return '+98' + d; // Iran country code — change if targeting other countries
+}
+
+function getRecaptcha(){
+  if(!recaptchaVerifier){
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'invisible' });
+  }
+  return recaptchaVerifier;
+}
+
+async function sendOtp(){
+  const input = document.getElementById('phoneInput');
+  const digits = input.value.replace(/\D/g,'');
+  if(digits.length < 9){ input.focus(); input.style.borderColor='var(--pink)'; setTimeout(()=>input.style.borderColor='',600); return; }
+  const btn = document.getElementById('sendOtpBtn');
+  const banner = document.getElementById('otpBanner');
+  if(!FIREBASE_READY){
+    banner.textContent = '⚠️ Firebase تنظیم نشده — README.md رو ببین.';
+    banner.style.display = 'block';
+    return;
+  }
+  pendingPhone = digits;
+  btn.disabled = true; const originalLabel = btn.textContent; btn.textContent = 'در حال ارسال...';
+  try{
+    const appVerifier = getRecaptcha();
+    confirmationResult = await firebase.auth().signInWithPhoneNumber(toE164(digits), appVerifier);
+    document.getElementById('otpPhoneShow').textContent = '0'+digits.replace(/^0/,'');
+    const boxes = document.querySelectorAll('#otpBoxes input');
+    boxes.forEach(b=>b.value='');
+    banner.style.display = 'none';
+    goScreen('otpScreen');
+    setTimeout(()=>boxes[0].focus(), 350);
+  }catch(e){
+    console.error(e);
+    banner.textContent = '⚠️ ارسال کد ناموفق بود. دوباره امتحان کن.';
+    banner.style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+}
+
+async function resendOtp(){
+  const banner = document.getElementById('otpBanner');
+  try{
+    const appVerifier = getRecaptcha();
+    confirmationResult = await firebase.auth().signInWithPhoneNumber(toE164(pendingPhone), appVerifier);
+    banner.style.display = 'none';
+  }catch(e){
+    console.error(e);
+    banner.textContent = '⚠️ ارسال دوباره ناموفق بود.';
+    banner.style.display = 'block';
+    banner.style.animation='none'; void banner.offsetWidth; banner.style.animation='bubbleIn .3s ease';
+  }
+}
+
+async function verifyOtp(){
+  const boxes = [...document.querySelectorAll('#otpBoxes input')];
+  const code = boxes.map(b=>b.value).join('');
+  const wrap = document.getElementById('otpBoxes');
+  if(code.length<5 || !confirmationResult){
+    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+    return;
+  }
+  const btn = document.getElementById('verifyOtpBtn');
+  btn.disabled = true;
+  try{
+    await confirmationResult.confirm(code);
+    myPhone = pendingPhone;
+    await afterAuthSuccess();
+  }catch(e){
+    console.error(e);
+    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function afterAuthSuccess(){
+  try{
+    const res = await window.storage.get('profile:'+myPhone, true);
+    if(res){
+      const p = JSON.parse(res.value);
+      me = p.name;
+      await window.storage.set('profile', JSON.stringify({phone:myPhone, name:me}), false);
+      await ensureRoomsExist();
+      goScreen('chatlist');
+      showScreen('chatlist');
+      return;
+    }
+  }catch(e){}
+  goScreen('nameScreen');
+  setTimeout(()=>document.getElementById('nameInput').focus(), 350);
+}
+
+async function completeSignup(){
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if(!name){ input.focus(); input.style.borderColor='var(--pink)'; setTimeout(()=>input.style.borderColor='',600); return; }
+  me = name;
+  try{
+    await window.storage.set('profile', JSON.stringify({phone:myPhone, name:me}), false);
+    await window.storage.set('profile:'+myPhone, JSON.stringify({name:me}), true);
+  }catch(e){}
+  await ensureRoomsExist();
+  goScreen('chatlist');
+  showScreen('chatlist');
+}
+
+function logout(){
+  me = null; myPhone = null; pendingPhone = null; confirmationResult = null; currentRoom = null;
+  lastRoomsSig = null; lastMessagesSig = null;
+  stopMessagePolling(); stopRoomsPolling();
+  document.getElementById('phoneInput').value='';
+  document.getElementById('nameInput').value='';
+  try{ if(FIREBASE_READY) firebase.auth().signOut(); }catch(e){}
+  goScreen('phoneScreen', true);
+}
+
+/* ---------- rooms ---------- */
+async function ensureRoomsExist(){
+  try{
+    const res = await window.storage.get('rooms', true);
+    if(!res){ throw new Error('none'); }
+  }catch(e){
+    try{ await window.storage.set('rooms', JSON.stringify(DEFAULT_ROOMS), true); }catch(err){}
+  }
+}
+
+async function getRooms(){
+  try{
+    const res = await window.storage.get('rooms', true);
+    return res ? JSON.parse(res.value) : DEFAULT_ROOMS;
+  }catch(e){ return DEFAULT_ROOMS; }
+}
+
+async function createRoom(){
+  const input = document.getElementById('newRoomInput');
+  const name = input.value.trim();
+  if(!name) return;
+  const id = 'r' + Date.now();
+  const rooms = await getRooms();
+  rooms.push({id, name});
+  try{
+    await window.storage.set('rooms', JSON.stringify(rooms), true);
+    input.value='';
+    loadRooms();
+  }catch(e){ alert('مشکلی در ساخت اتاق پیش اومد.'); }
+}
+
+async function loadRooms(){
+  const rooms = await getRooms();
+  const rowsData = [];
+  for(const room of rooms){
+    let last = null;
+    try{
+      const r = await window.storage.get('messages:'+room.id, true);
+      if(r){ const arr = JSON.parse(r.value); last = arr[arr.length-1]; }
+    }catch(e){}
+    rowsData.push({room, last});
+  }
+  const sig = JSON.stringify(rowsData.map(d=>[d.room.id, d.room.name, d.last? [d.last.sender, d.last.text, d.last.ts] : null]));
+  if(sig === lastRoomsSig) return; // nothing changed, skip re-render to avoid flicker
+  lastRoomsSig = sig;
+
+  const tabCountEl = document.getElementById('tabCount');
+  if(tabCountEl) tabCountEl.textContent = rooms.length;
+  const listEl = document.getElementById('roomList');
+  if(!listEl) return;
+  listEl.innerHTML='';
+  for(const {room, last} of rowsData){
+    const row = document.createElement('div');
+    row.className='room-row';
+    row.innerHTML = `
+      <div class="avatar">${initials(room.name)}</div>
+      <div class="room-meta">
+        <div class="room-top">
+          <span class="name">${escapeHtml(room.name)}</span>
+          <span class="time">${last? formatTime(last.ts) : ''}</span>
+        </div>
+        <div class="room-bottom">
+          <span class="preview">${last? escapeHtml((last.sender===me?'شما: ':'')+last.text) : 'هنوز پیامی نیست — اولین نفر باش'}</span>
+        </div>
+      </div>`;
+    row.onclick = ()=>openRoom(room);
+    listEl.appendChild(row);
+  }
+}
+
+function startRoomsPolling(){ stopRoomsPolling(); roomsPollTimer = setInterval(loadRooms, 4000); }
+function stopRoomsPolling(){ if(roomsPollTimer) clearInterval(roomsPollTimer); }
+
+function openRoom(room){
+  currentRoom = room;
+  lastMessagesSig = null;
+  document.getElementById('roomTitle').textContent = room.name;
+  document.getElementById('roomAvatar').textContent = initials(room.name);
+  goScreen('room');
+  refreshMessages(true);
+  pollTimer = setInterval(()=>refreshMessages(false), 2500);
+}
+function stopMessagePolling(){ if(pollTimer) clearInterval(pollTimer); }
+
+async function getMessages(roomId){
+  try{
+    const r = await window.storage.get('messages:'+roomId, true);
+    return r? JSON.parse(r.value) : [];
+  }catch(e){ return []; }
+}
+
+async function refreshMessages(forceScroll){
+  if(!currentRoom) return;
+  const msgs = await getMessages(currentRoom.id);
+  const sig = JSON.stringify(msgs);
+  const isNew = sig !== lastMessagesSig;
+  if(!isNew && !forceScroll) return; // nothing changed, skip re-render
+  lastMessagesSig = sig;
+
+  const box = document.getElementById('messages');
+  const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+
+  if(isNew){
+    if(msgs.length===0){
+      box.innerHTML = `<div class="empty-room">
+        <div style="font-size:30px;">💬</div>
+        هنوز پیامی توی این اتاق نیست.<br/>اولین نفری باش که سلام می‌گه!
+      </div>`;
+    } else {
+      box.innerHTML = msgs.map(m=>{
+        const mine = m.sender===me;
+        return `<div class="bubble ${mine?'msg-me':'msg-them'}">
+          ${!mine? `<span class="sender">${escapeHtml(m.sender)}</span>`:''}
+          ${escapeHtml(m.text)}
+          <span class="meta">${formatTime(m.ts)}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+  if(msgs.length>0 && (wasAtBottom || forceScroll)){ box.scrollTop = box.scrollHeight; }
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if(!text || !currentRoom) return;
+  input.value='';
+  const msgs = await getMessages(currentRoom.id);
+  msgs.push({sender:me, text, ts:Date.now()});
+  const trimmed = msgs.slice(-150);
+  try{
+    await window.storage.set('messages:'+currentRoom.id, JSON.stringify(trimmed), true);
+    refreshMessages(true);
+    loadRooms();
+  }catch(e){ alert('ارسال پیام ناموفق بود، دوباره امتحان کن.'); }
+}
+
+function formatTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('fa-IR', {hour:'2-digit', minute:'2-digit'});
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------- otp box auto-advance ---------- */
+(function setupOtpBoxes(){
+  const boxes = document.querySelectorAll('#otpBoxes input');
+  boxes.forEach((box, idx)=>{
+    box.addEventListener('input', ()=>{
+      box.value = box.value.replace(/\D/g,'');
+      if(box.value && idx < boxes.length-1) boxes[idx+1].focus();
+      if(boxes.every(b=>b.value.length===1)) verifyOtp();
+    });
+    box.addEventListener('keydown', e=>{
+      if(e.key==='Backspace' && !box.value && idx>0) boxes[idx-1].focus();
+    });
+  });
+})();
+
+document.getElementById('phoneInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendOtp(); });
+document.getElementById('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') completeSignup(); });
+
+/* =====================================================================
+   GAMES MODULE — online 2-player duels over shared window.storage
+   ===================================================================== */
+
+const GAME_META = {
+  xo:     { name:'دوئل ایکس‌دو',     icon:'⭕❌',   desc:'بازی کلاسیک دونفره؛ هرکی سه‌تا رو ردیف کنه می‌بره.' },
+  reflex: { name:'دوئل رفلکس',       icon:'⚡',     desc:'وقتی چراغ سبز شد سریع‌تر از حریف بزن! پرهیجان‌ترین بازی.' },
+  rps:    { name:'سنگ‌کاغذ‌قیچی',    icon:'✊✋✌️', desc:'اولین نفری که ۳ دور رو ببره، قهرمانه.' }
+};
+const RPS_ICON = {rock:'✊', paper:'✋', scissors:'✌️'};
+const RPS_BEATS = {rock:'scissors', paper:'rock', scissors:'paper'};
+
+function stopGamePolling(){
+  if(gamePollTimer){ clearInterval(gamePollTimer); gamePollTimer=null; }
+  if(reflexLocalTimer){ clearTimeout(reflexLocalTimer); reflexLocalTimer=null; }
+}
+
+function genGameCode(type){
+  return type.slice(0,2).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
+}
+
+async function getLatestSession(type, id){
+  try{
+    const r = await window.storage.get('gsess:'+type+':'+id, true);
+    return r ? JSON.parse(r.value) : null;
+  }catch(e){ return null; }
+}
+
+async function saveSession(s){
+  try{ await window.storage.set('gsess:'+s.type+':'+s.id, JSON.stringify(s), true); }catch(e){}
+  currentSession = s;
+}
+
+async function createGameSession(type){
+  const id = genGameCode(type);
+  const base = {
+    id, type, status:'waiting',
+    hostPhone: myPhone, hostName: me,
+    guestPhone: null, guestName: null,
+    createdAt: Date.now()
+  };
+  if(type==='xo')     Object.assign(base, { board:Array(9).fill(null), turn:'X', winner:null });
+  if(type==='reflex') Object.assign(base, { phase:'waiting', startAt:null, taps:{} });
+  if(type==='rps')    Object.assign(base, { round:1, scores:{host:0,guest:0}, choices:{host:null,guest:null} });
+  try{ await window.storage.set('gsess:'+type+':'+id, JSON.stringify(base), true); }catch(e){}
+  return base;
+}
+
+async function joinGameSession(type, id){
+  const key = 'gsess:'+type+':'+id;
+  const s = await getLatestSession(type, id);
+  if(!s){ alert('این بازی پیدا نشد یا تموم شده.'); return null; }
+  if(s.status!=='waiting'){ alert('این بازی پره یا شروع شده.'); return null; }
+  if(s.hostPhone===myPhone){ alert('نمی‌تونی به بازی خودت بپیوندی!'); return null; }
+  s.guestPhone = myPhone; s.guestName = me; s.status = 'playing';
+  if(type==='reflex'){ s.phase='countdown'; s.startAt = Date.now() + 2500 + Math.floor(Math.random()*2000); }
+  try{ await window.storage.set(key, JSON.stringify(s), true); }catch(e){ alert('پیوستن ناموفق بود.'); return null; }
+  return s;
+}
+
+async function listOpenSessions(type){
+  try{
+    const listRes = await window.storage.list('gsess:'+type+':', true);
+    if(!listRes || !listRes.keys) return [];
+    const out = [];
+    for(const k of listRes.keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r){
+          const s = JSON.parse(r.value);
+          if(s.status==='waiting' && Date.now()-s.createdAt < 10*60*1000) out.push(s);
+        }
+      }catch(e){}
+    }
+    return out.sort((a,b)=>b.createdAt-a.createdAt);
+  }catch(e){ return []; }
+}
+
+/* ---------- menu & lobby ---------- */
+function openGameLobby(type){
+  currentGameType = type;
+  const meta = GAME_META[type];
+  document.getElementById('lobbyTitle').textContent = meta.icon + ' ' + meta.name;
+  document.getElementById('lobbyDesc').textContent = meta.desc;
+  document.getElementById('joinCodeInput').value = '';
+  goScreen('gameLobby'); showScreen('gameLobby');
+  refreshLobby();
+  gamePollTimer = setInterval(refreshLobby, 3000);
+}
+
+async function refreshLobby(){
+  if(!currentGameType) return;
+  const list = (await listOpenSessions(currentGameType)).filter(s=>s.hostPhone!==myPhone);
+  const el = document.getElementById('lobbySessions');
+  if(!el) return;
+  if(list.length===0){
+    el.innerHTML = `<div class="empty-room" style="padding:14px;"><div style="font-size:26px;">🎮</div>فعلاً کسی منتظر بازی نیست.<br/>یه بازی جدید بساز و کدش رو به دوستت بده!</div>`;
+    return;
+  }
+  el.innerHTML = list.map(s=>`
+    <div class="lobby-row">
+      <div class="avatar">${initials(s.hostName)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:14px;">${escapeHtml(s.hostName)}</div>
+        <div style="font-size:11px;color:var(--ink-faint);">کد: ${s.id}</div>
+      </div>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;font-size:12px;" onclick="joinAndEnter('${s.type}','${s.id}')">پیوستن</button>
+    </div>`).join('');
+}
+
+async function joinWithCode(){
+  const input = document.getElementById('joinCodeInput');
+  const code = input.value.trim().toUpperCase();
+  if(!code) return;
+  await joinAndEnter(currentGameType, code);
+}
+
+async function hostNewGame(){
+  stopGamePolling();
+  const s = await createGameSession(currentGameType);
+  enterGameScreen(currentGameType, s, 'host');
+}
+
+async function joinAndEnter(type, id){
+  stopGamePolling();
+  const s = await joinGameSession(type, id);
+  if(!s){ gamePollTimer = setInterval(refreshLobby, 3000); return; }
+  enterGameScreen(type, s, 'guest');
+}
+
+function enterGameScreen(type, session, role){
+  currentSession = session;
+  myGameRole = role;
+  const screenId = type==='xo' ? 'gameXO' : type==='reflex' ? 'gameReflex' : 'gameRPS';
+  goScreen(screenId); showScreen(screenId);
+  renderGame(session);
+  const pollMs = type==='reflex' ? 350 : 1000;
+  gamePollTimer = setInterval(pollGame, pollMs);
+}
+
+async function pollGame(){
+  if(!currentSession) return;
+  const s = await getLatestSession(currentSession.type, currentSession.id);
+  if(!s) return;
+  currentSession = s;
+  renderGame(s);
+}
+
+function renderGame(s){
+  if(s.type==='xo') renderXO(s);
+  if(s.type==='reflex') renderReflex(s);
+  if(s.type==='rps') renderRPS(s);
+}
+
+async function cancelWaitingGame(){
+  const s = currentSession;
+  if(s && s.status==='waiting'){
+    try{ await window.storage.delete('gsess:'+s.type+':'+s.id, true); }catch(e){}
+  }
+  leaveGame();
+}
+
+function leaveGame(){
+  stopGamePolling();
+  currentSession = null; myGameRole = null;
+  goScreen('gameLobby'); showScreen('gameLobby');
+  refreshLobby();
+  gamePollTimer = setInterval(refreshLobby, 3000);
+}
+
+function backToGamesMenu(){
+  stopGamePolling();
+  currentSession = null; currentGameType = null; myGameRole = null;
+  goScreen('games'); showScreen('games');
+}
+
+/* ---------- XO ---------- */
+function checkWinnerXO(b){
+  const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const [a,c,d] of lines){ if(b[a] && b[a]===b[c] && b[a]===b[d]) return b[a]; }
+  if(b.every(x=>x)) return 'draw';
+  return null;
+}
+
+function renderXO(s){
+  const waiting = s.status==='waiting';
+  document.getElementById('xoWaiting').style.display = waiting ? 'flex' : 'none';
+  document.getElementById('xoBoardWrap').style.display = waiting ? 'none' : 'flex';
+  if(waiting){ document.getElementById('xoCode').textContent = s.id; document.getElementById('xoStatus').textContent=''; return; }
+
+  const mySymbol = myGameRole==='host' ? 'X' : 'O';
+  const oppName = myGameRole==='host' ? s.guestName : s.hostName;
+  document.getElementById('xoOpponent').textContent = 'در برابر: ' + (oppName || '…');
+  document.getElementById('xoBoard').innerHTML = s.board.map((v,i)=>
+    `<div class="cell ${v?'filled':''}" onclick="xoMove(${i})">${v||''}</div>`).join('');
+
+  const statusEl = document.getElementById('xoStatus');
+  const restartBtn = document.getElementById('xoRestartBtn');
+  if(s.status==='finished'){
+    if(s.winner==='draw') statusEl.textContent = '🤝 مساوی شد!';
+    else if(s.winner===mySymbol) statusEl.textContent = '🏆 بردی!';
+    else statusEl.textContent = '😅 باختی!';
+    restartBtn.style.display = 'block';
+  } else {
+    statusEl.textContent = s.turn===mySymbol ? '🎯 نوبت توئه' : '⏳ نوبت حریف...';
+    restartBtn.style.display = 'none';
+  }
+}
+
+async function xoMove(i){
+  const s = currentSession;
+  if(!s || s.status!=='playing') return;
+  const mySymbol = myGameRole==='host' ? 'X' : 'O';
+  if(s.turn!==mySymbol || s.board[i]) return;
+  const fresh = await getLatestSession(s.type, s.id) || s;
+  if(fresh.turn!==mySymbol || fresh.board[i]) { renderXO(fresh); currentSession=fresh; return; }
+  const board = [...fresh.board]; board[i] = mySymbol;
+  const win = checkWinnerXO(board);
+  const ns = {...fresh, board, turn: mySymbol==='X' ? 'O' : 'X'};
+  if(win){ ns.status='finished'; ns.winner=win; }
+  await saveSession(ns);
+  renderXO(ns);
+}
+
+async function restartXO(){
+  const s = currentSession;
+  const ns = {...s, board:Array(9).fill(null), turn:'X', status:'playing', winner:null};
+  await saveSession(ns);
+  renderXO(ns);
+}
+
+/* ---------- REFLEX ---------- */
+function renderReflex(s){
+  const waiting = s.status==='waiting';
+  document.getElementById('reflexWaiting').style.display = waiting ? 'flex' : 'none';
+  document.getElementById('reflexArena').style.display = waiting ? 'none' : 'flex';
+  if(waiting){ document.getElementById('reflexCode').textContent = s.id; return; }
+
+  const oppName = myGameRole==='host' ? s.guestName : s.hostName;
+  document.getElementById('reflexOpponent').textContent = 'در برابر: ' + (oppName || '…');
+  const myKey = myGameRole, oppKey = myGameRole==='host' ? 'guest' : 'host';
+  const circle = document.getElementById('reflexCircle');
+  const resultEl = document.getElementById('reflexResult');
+  const restartBtn = document.getElementById('reflexRestartBtn');
+
+  if(s.phase==='countdown'){
+    circle.className = 'reflex-circle red';
+    circle.textContent = 'صبر کن...';
+    resultEl.textContent = '';
+    restartBtn.style.display = 'none';
+    scheduleReflexReveal(s);
+  } else if(s.phase==='go'){
+    circle.className = 'reflex-circle green';
+    circle.textContent = 'بزن! ⚡';
+    resultEl.textContent = '';
+  } else if(s.phase==='result'){
+    const myTap = s.taps ? s.taps[myKey] : undefined;
+    const oppTap = s.taps ? s.taps[oppKey] : undefined;
+    circle.className = 'reflex-circle';
+    circle.textContent = '🏁';
+    let msg = '';
+    if(myTap===-1 && oppTap===-1) msg = '😬 هر دو زودتر زدید! دوباره امتحان کنید.';
+    else if(myTap===-1) msg = '🚫 زودتر زدی! باختی.';
+    else if(oppTap===-1) msg = '🎉 حریف زودتر زد، تو بردی!';
+    else if(myTap<oppTap) msg = `🏆 بردی! زمان تو: ${myTap}ms`;
+    else if(myTap>oppTap) msg = `😅 باختی! زمان تو: ${myTap}ms — حریف: ${oppTap}ms`;
+    else msg = '🤝 مساوی!';
+    resultEl.textContent = msg;
+    restartBtn.style.display = 'block';
+  }
+}
+
+function scheduleReflexReveal(s){
+  if(reflexLocalTimer) return;
+  const delay = s.startAt - Date.now();
+  reflexLocalTimer = setTimeout(async ()=>{
+    reflexLocalTimer = null;
+    const fresh = await getLatestSession(s.type, s.id);
+    if(!fresh || fresh.phase!=='countdown') return;
+    if(myGameRole==='host'){ fresh.phase='go'; await saveSession(fresh); }
+    if(currentSession && currentSession.id===s.id){
+      currentSession.phase='go';
+      renderReflex(currentSession);
+    }
+  }, Math.max(0, delay));
+}
+
+async function reflexTap(){
+  const s = currentSession;
+  if(!s || (s.phase!=='countdown' && s.phase!=='go')) return;
+  const myKey = myGameRole;
+  const fresh = await getLatestSession(s.type, s.id) || s;
+  fresh.taps = fresh.taps || {};
+  if(fresh.taps[myKey]!==undefined) return;
+  const now = Date.now();
+  fresh.taps[myKey] = fresh.phase==='countdown' ? -1 : (now - fresh.startAt);
+  const oppKey = myKey==='host' ? 'guest' : 'host';
+  if(fresh.taps[oppKey]!==undefined) fresh.phase = 'result';
+  await saveSession(fresh);
+  renderReflex(fresh);
+}
+
+async function restartReflex(){
+  const s = currentSession;
+  const ns = {...s, phase:'countdown', startAt: Date.now()+2500+Math.floor(Math.random()*2000), taps:{}};
+  await saveSession(ns);
+  renderReflex(ns);
+}
+
+/* ---------- RPS ---------- */
+function renderRPS(s){
+  const waiting = s.status==='waiting';
+  document.getElementById('rpsWaiting').style.display = waiting ? 'flex' : 'none';
+  document.getElementById('rpsArena').style.display = waiting ? 'none' : 'flex';
+  if(waiting){ document.getElementById('rpsCode').textContent = s.id; return; }
+
+  const myKey = myGameRole, oppKey = myGameRole==='host' ? 'guest' : 'host';
+  const oppName = myGameRole==='host' ? s.guestName : s.hostName;
+  document.getElementById('rpsOpponent').textContent = oppName || '…';
+  document.getElementById('rpsScoreMe').textContent = s.scores[myKey];
+  document.getElementById('rpsScoreOpp').textContent = s.scores[oppKey];
+  document.getElementById('rpsRound').textContent = 'دور ' + s.round;
+
+  const choiceWrap = document.getElementById('rpsChoices');
+  const resultEl = document.getElementById('rpsRoundResult');
+  const nextBtn = document.getElementById('rpsNextBtn');
+  const restartBtn = document.getElementById('rpsRestartBtn');
+
+  if(s.status==='finished'){
+    choiceWrap.style.display = 'none';
+    nextBtn.style.display = 'none';
+    resultEl.textContent = s.scores[myKey] > s.scores[oppKey] ? '🏆 برنده‌ی مسابقه شدی!' : '😅 این دفعه باختی!';
+    restartBtn.style.display = 'block';
+    return;
+  }
+  restartBtn.style.display = 'none';
+
+  const myChoice = s.choices[myKey];
+  const oppChoice = s.choices[oppKey];
+  if(myChoice && oppChoice){
+    choiceWrap.style.display = 'none';
+    let msg;
+    if(myChoice===oppChoice) msg = `🤝 مساوی — هر دو ${RPS_ICON[myChoice]}`;
+    else if(RPS_BEATS[myChoice]===oppChoice) msg = `🏆 بردی! ${RPS_ICON[myChoice]} vs ${RPS_ICON[oppChoice]}`;
+    else msg = `😅 باختی! ${RPS_ICON[myChoice]} vs ${RPS_ICON[oppChoice]}`;
+    resultEl.textContent = msg;
+    nextBtn.style.display = 'block';
+  } else {
+    choiceWrap.style.display = 'flex';
+    resultEl.textContent = myChoice ? '⏳ منتظر انتخاب حریف...' : 'انتخابت رو بزن!';
+    nextBtn.style.display = 'none';
+  }
+}
+
+async function rpsPick(choice){
+  const s = currentSession;
+  if(!s || s.status!=='playing') return;
+  const myKey = myGameRole;
+  const fresh = await getLatestSession(s.type, s.id) || s;
+  if(fresh.choices[myKey]) return;
+  fresh.choices[myKey] = choice;
+  const oppKey = myKey==='host' ? 'guest' : 'host';
+  if(fresh.choices[oppKey]){
+    const opp = fresh.choices[oppKey];
+    if(choice!==opp){
+      if(RPS_BEATS[choice]===opp) fresh.scores[myKey]++;
+      else fresh.scores[oppKey]++;
+    }
+    if(fresh.scores.host>=3 || fresh.scores.guest>=3) fresh.status = 'finished';
+  }
+  await saveSession(fresh);
+  renderRPS(fresh);
+}
+
+async function rpsNextRound(){
+  const s = currentSession;
+  const ns = {...s, round: s.round+1, choices:{host:null, guest:null}};
+  await saveSession(ns);
+  renderRPS(ns);
+}
+
+async function restartRPS(){
+  const s = currentSession;
+  const ns = {...s, round:1, scores:{host:0,guest:0}, choices:{host:null,guest:null}, status:'playing'};
+  await saveSession(ns);
+  renderRPS(ns);
+}
+
+/* ---------- boot sequence ---------- */
+(async function init(){
+  const bootStart = Date.now();
+  function afterDelay(fn){
+    const wait = Math.max(0, 1500 - (Date.now() - bootStart));
+    setTimeout(fn, wait);
+  }
+
+  try{
+    if(!FIREBASE_READY) throw new Error('firebase not configured');
+    const user = await Promise.race([
+      new Promise((resolve)=>{ const unsub = firebase.auth().onAuthStateChanged(u=>{ unsub(); resolve(u); }); }),
+      new Promise((resolve)=>setTimeout(()=>resolve(null), 4000))
+    ]);
+
+    if(user && user.phoneNumber){
+      myPhone = user.phoneNumber.replace('+98','').replace(/^0+/,'');
+      let hasProfile = false;
+      try{
+        const res = await window.storage.get('profile:'+myPhone, true);
+        if(res){ const p = JSON.parse(res.value); me = p.name; await ensureRoomsExist(); hasProfile = true; }
+      }catch(e){}
+      afterDelay(()=>{
+        if(hasProfile){ goScreen('chatlist'); showScreen('chatlist'); }
+        else{ goScreen('nameScreen'); setTimeout(()=>document.getElementById('nameInput').focus(),350); }
+      });
+      return;
+    }
+  }catch(e){ console.warn('[LumoChat] auth boot check skipped:', e.message); }
+
+  afterDelay(()=>{ goScreen('phoneScreen'); setTimeout(()=>document.getElementById('phoneInput').focus(),350); });
+})();
+</script>
+
+</body>
+</html>
