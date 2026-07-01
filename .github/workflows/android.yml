@@ -10,41 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # گرفتن پروژه
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # نصب پکیج‌ها
       - name: Install dependencies
         run: npm install
 
-      # نصب Capacitor CLI (در صورت نیاز)
-      - name: Install Capacitor CLI
+      - name: Install Capacitor
         run: npm install @capacitor/cli @capacitor/core
 
-      # Sync پروژه Android
       - name: Sync Capacitor
         run: npx cap sync android
 
-      # Java برای Gradle
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # ساخت APK (روش درست و بدون خطا)
+      # 👇 این بخش مهمه (حل مشکل gradlew)
       - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          cd android
+          ls
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      # آپلود APK خروجی
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
