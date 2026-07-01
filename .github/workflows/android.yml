@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
@@ -10,29 +10,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # گرفتن پروژه از GitHub
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      # نصب Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      # نصب وابستگی‌ها
+      - name: Install dependencies
+        run: npm install
 
-      - run: npx cap sync android
+      # نصب Capacitor CLI (اگر لازم باشد)
+      - name: Install Capacitor
+        run: npm install @capacitor/cli @capacitor/core
 
+      # Sync پروژه اندروید
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # نصب Java برای Gradle
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      # ساخت APK
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: chmod +x gradlew && ./gradlew assembleDebug
 
+      # آپلود فایل APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-apk
+          name: LumoChat-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
