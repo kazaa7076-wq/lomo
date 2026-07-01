@@ -20,15 +20,15 @@ jobs:
         with:
           node-version: 20
 
-      # نصب وابستگی‌ها
+      # نصب پکیج‌ها
       - name: Install dependencies
         run: npm install
 
-      # نصب Capacitor CLI (اگر داخل پروژه کامل نباشه کمک می‌کنه)
+      # نصب Capacitor CLI (در صورت نیاز)
       - name: Install Capacitor CLI
         run: npm install @capacitor/cli @capacitor/core
 
-      # Sync کردن Android
+      # Sync پروژه Android
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -39,14 +39,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # ساخت APK (درست‌ترین روش)
+      # ساخت APK (روش درست و بدون خطا)
       - name: Build APK
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
 
-      # آپلود APK
+      # آپلود APK خروجی
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
