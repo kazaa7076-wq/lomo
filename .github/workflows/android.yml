@@ -10,39 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # گرفتن کد از GitHub
+      # گرفتن پروژه
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # نصب Node.js
+      # Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # نصب پکیج‌ها
+      # نصب وابستگی‌ها
       - name: Install dependencies
         run: npm install
 
-      # نصب Capacitor
+      # نصب Capacitor CLI (اگر داخل پروژه کامل نباشه کمک می‌کنه)
       - name: Install Capacitor CLI
         run: npm install @capacitor/cli @capacitor/core
 
-      # sync کردن پروژه اندروید
+      # Sync کردن Android
       - name: Sync Capacitor
         run: npx cap sync android
 
-      # نصب Java
+      # Java برای Gradle
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # ساخت APK (روش درست و بدون خطای مسیر)
+      # ساخت APK (درست‌ترین روش)
       - name: Build APK
+        working-directory: android
         run: |
-          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
